@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cardápio LimaLimão</title>
+<meta name="description" content="Cardápio digital da LimaLimão Arte & Café — salgados, bebidas, doces e bolos.">
+<meta name="theme-color" content="#fdefe0">
+<link rel="stylesheet" href="assets/tema.css">
+<style>
+  body {
+    background:
+      radial-gradient(60rem 30rem at 110% -10%, rgba(245, 155, 94, .22), transparent 60%),
+      radial-gradient(40rem 24rem at -20% 30%, rgba(66, 69, 9, .06), transparent 60%),
+      var(--creme);
+    min-height: 100vh;
+  }
+  .pagina { max-width: 720px; margin: 0 auto; padding: 0 16px 120px; }
+
+  header.topo { text-align: center; padding: 34px 0 18px; }
+  .topo .marca { font-size: clamp(2.6rem, 11vw, 3.4rem); }
+  .topo .marca-sub { font-size: clamp(1.5rem, 6vw, 1.9rem); margin-top: 2px; }
+  .topo h1 {
+    font-family: var(--serif); font-weight: 400; color: var(--oliva);
+    font-size: clamp(2rem, 9vw, 2.8rem); margin: 14px 0 0; letter-spacing: .04em;
+  }
+  .topo .traco { width: 170px; height: 6px; margin: 2px auto 0; border-radius: 99px;
+    background: linear-gradient(90deg, transparent, var(--laranja) 20%, var(--pessego) 80%, transparent); }
+  .acoes { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+  .btn-pill {
+    display: inline-flex; align-items: center; gap: 7px; text-decoration: none;
+    padding: 9px 15px; border-radius: 999px; font-weight: 700; font-size: .9rem;
+    background: var(--papel); color: var(--oliva); border: 1px solid var(--linha);
+    transition: transform .15s ease, background .15s ease;
+  }
+  .btn-pill:active { transform: scale(.97); }
+  .btn-pill.zap { background: var(--oliva); color: #fff; border-color: var(--oliva); }
+  .btn-pill svg { width: 17px; height: 17px; }
+
+  /* Navegação por categoria */
+  nav.cats {
+    position: sticky; top: 0; z-index: 5; margin: 8px -16px 0; padding: 10px 16px;
+    background: rgba(253, 239, 224, .92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid transparent; transition: border-color .2s;
+  }
+  nav.cats.preso { border-bottom-color: var(--linha); }
+  .busca { position: relative; margin-bottom: 10px; }
+  .busca input {
+    width: 100%; padding: 11px 14px 11px 40px; border-radius: 12px; border: 1px solid var(--linha);
+    background: var(--papel); font-size: 1rem; outline: none;
+  }
+  .busca input:focus { border-color: var(--pessego); box-shadow: 0 0 0 3px rgba(245, 155, 94, .25); }
+  .busca svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 18px; color: var(--tinta-2); }
+  .chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; scroll-behavior: smooth; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--linha);
+    background: var(--papel); color: var(--tinta-2); font-weight: 700; font-size: .85rem; cursor: pointer; white-space: nowrap;
+  }
+  .chip.ativo { background: var(--laranja); border-color: var(--laranja); color: #fff; }
+
+  .secao-titulo {
+    font-family: var(--serif); font-weight: 400; color: var(--oliva); text-align: center;
+    font-size: 1.55rem; margin: 34px 0 4px;
+  }
+  .secao-titulo::after { content: ""; display: block; width: 60px; height: 3px; border-radius: 9px; background: var(--laranja); margin: 6px auto 0; opacity: .7; }
+
+  section.cat { margin-top: 26px; scroll-margin-top: 130px; }
+  section.cat h2 { font-size: 1.35rem; margin: 0 0 10px; font-weight: 400; }
+  .obs {
+    display: flex; gap: 10px; align-items: flex-start; font-size: .88rem; color: var(--tinta-2);
+    background: rgba(245, 155, 94, .14); border-radius: 12px; padding: 10px 12px; margin: 0 0 10px;
+  }
+  .lista { background: var(--papel); border-radius: var(--raio); box-shadow: var(--sombra); overflow: hidden; }
+  .item {
+    display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center;
+    padding: 12px 14px; border-top: 1px solid var(--linha);
+  }
+  .item:first-child { border-top: 0; }
+  .item.sem-foto { grid-template-columns: 1fr auto; }
+  .foto {
+    width: 64px; height: 64px; border-radius: 12px; overflow: hidden; background: var(--creme);
+    border: 0; padding: 0; cursor: zoom-in;
+  }
+  .foto img { width: 100%; height: 100%; object-fit: cover; }
+  .item .nome { font-weight: 800; font-size: 1rem; line-height: 1.25; }
+  .item .desc { color: var(--tinta-2); font-size: .85rem; margin-top: 2px; line-height: 1.35; }
+  .item .preco { font-weight: 800; color: var(--oliva); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .item .preco small { font-weight: 600; font-size: .75em; color: var(--tinta-2); margin-right: 2px; }
+  .item.esgotado .nome, .item.esgotado .preco { color: var(--tinta-2); }
+  .item.esgotado .foto { filter: grayscale(1); opacity: .6; }
+  .tag-esgotado {
+    display: inline-block; margin-left: 6px; vertical-align: 2px; font-size: .68rem; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--alerta); background: rgba(200, 64, 39, .1); padding: 2px 7px; border-radius: 99px;
+  }
+  .vazio { text-align: center; color: var(--tinta-2); padding: 40px 0; }
+
+  footer.rodape {
+    margin-top: 40px; text-align: center; padding: 26px 16px; border-radius: 22px;
+    background: linear-gradient(135deg, var(--laranja-escuro), var(--laranja) 50%, var(--pessego)); color: #fff;
+  }
+  .rodape strong { font-family: var(--serif); font-weight: 400; font-size: 1.6rem; display: block; }
+  .rodape .apps { display: flex; justify-content: center; gap: 8px; margin: 12px 0 16px; }
+  .rodape .apps span { background: #fff; color: var(--laranja-escuro); font-weight: 800; padding: 6px 14px; border-radius: 10px; }
+  .rodape a { color: #fff; font-weight: 700; }
+  .rodape .contatos { display: flex; flex-direction: column; gap: 6px; font-size: .95rem; }
+  .atualizado { text-align: center; color: var(--tinta-2); font-size: .75rem; margin-top: 16px; }
+
+  /* Foto ampliada */
+  dialog.zoom { border: 0; padding: 0; border-radius: 18px; max-width: min(92vw, 520px); background: var(--papel); }
+  dialog.zoom::backdrop { background: rgba(43, 42, 31, .6); }
+  dialog.zoom img { width: 100%; max-height: 70vh; object-fit: cover; }
+  dialog.zoom .info { padding: 14px 16px 18px; }
+  dialog.zoom .info b { display: block; font-size: 1.1rem; }
+  dialog.zoom form { position: absolute; top: 8px; right: 8px; }
+  dialog.zoom .fechar { border: 0; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.9); font-size: 1.2rem; cursor: pointer; }
+
+  .faixa-preview { background: var(--oliva); color: #fff; text-align: center; font-size: .8rem; padding: 6px; font-weight: 700; }
+
+  @media (prefers-reduced-motion: reduce) { .chips { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="faixa-preview" id="faixaPreview" hidden>Pré-visualização com os dados do painel (não publicado)</div>
+<div class="pagina">
+  <header class="topo">
+    <div class="marca" id="nomeLoja">LimaLimão</div>
+    <div class="marca-sub" id="subLoja">Arte &amp; Café</div>
+    <h1>CARDÁPIO</h1>
+    <div class="traco"></div>
+    <div class="acoes" id="acoes"></div>
+  </header>
+
+  <nav class="cats" id="nav">
+    <label class="busca">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="busca" type="search" placeholder="Buscar no cardápio" autocomplete="off" aria-label="Buscar no cardápio">
+    </label>
+    <div class="chips" id="chips"></div>
+  </nav>
+
+  <main id="conteudo"></main>
+
+  <footer class="rodape" id="rodape"></footer>
+  <p class="atualizado" id="atualizado"></p>
+</div>
+
+<dialog class="zoom" id="zoom">
+  <form method="dialog"><button class="fechar" aria-label="Fechar">×</button></form>
+  <div id="zoomFoto"></div>
+  <div class="info"><b id="zoomNome"></b><span id="zoomDesc"></span></div>
+</dialog>
+
+<script src="dados/cardapio.js"></script>
+<script src="assets/config.js"></script>
+<script>
+// Com Supabase configurado, lê o cardápio do banco; se falhar, usa o arquivo dados/cardapio.js
+async function lerNuvem() {
+  const c = window.SUPABASE;
+  if (!c || !c.url || !c.chave) return null;
+  try {
+    const r = await fetch(c.url.replace(/\/$/, '') + '/rest/v1/documentos?id=eq.cardapio&select=dados', { headers: { apikey: c.chave }, cache: 'no-store' });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j[0] ? j[0].dados : null;
+  } catch (e) { return null; }
+}
+(async function () {
+  const CHAVE = 'limalima.cardapio';
+  let dados = window.CARDAPIO;
+  let preview = false;
+  if (new URLSearchParams(location.search).has('preview')) {
+    try {
+      const local = JSON.parse(localStorage.getItem(CHAVE));
+      if (local) { dados = local; preview = true; document.getElementById('faixaPreview').hidden = false; }
+    } catch (e) {}
+  }
+  if (!preview) dados = (await lerNuvem()) || dados;
+
+  const brl = n => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  const loja = dados.loja || {};
+  document.getElementById('nomeLoja').textContent = loja.nome || '';
+  document.getElementById('subLoja').textContent = loja.subtitulo || '';
+
+  const icZap = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.5-.3Z"/></svg>';
+  const icInsta = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>';
+  const acoes = [];
+  if (loja.whatsapp) acoes.push(`<a class="btn-pill zap" href="https://wa.me/${esc(loja.whatsapp)}?text=${encodeURIComponent('Olá! Vim pelo cardápio digital e gostaria de fazer um pedido.')}" target="_blank" rel="noopener">${icZap} Pedir no WhatsApp</a>`);
+  if (loja.instagram) acoes.push(`<a class="btn-pill" href="https://instagram.com/${esc(loja.instagram)}" target="_blank" rel="noopener">${icInsta} @${esc(loja.instagram)}</a>`);
+  document.getElementById('acoes').innerHTML = acoes.join('');
+
+  document.getElementById('rodape').innerHTML = `
+    <strong>Temos delivery</strong>
+    <div class="apps">${(loja.delivery || []).map(d => `<span>${esc(d)}</span>`).join('')}</div>
+    <div class="contatos">
+      ${loja.whatsapp ? `<a href="https://wa.me/${esc(loja.whatsapp)}" target="_blank" rel="noopener">WhatsApp ${esc(loja.whatsappTexto || loja.whatsapp)}</a>` : ''}
+      ${loja.instagram ? `<a href="https://instagram.com/${esc(loja.instagram)}" target="_blank" rel="noopener">@${esc(loja.instagram)}</a>` : ''}
+    </div>`;
+  if (dados.atualizado) {
+    const d = new Date(dados.atualizado + (dados.atualizado.length === 10 ? 'T12:00' : ''));
+    if (!isNaN(d)) document.getElementById('atualizado').textContent = 'Atualizado em ' + d.toLocaleDateString('pt-BR');
+  }
+
+  const produtos = (dados.produtos || []).filter(p => p.ativo !== false);
+  const cats = (dados.categorias || []).filter(c => produtos.some(p => p.cat === c.id));
+
+  const chipsEl = document.getElementById('chips');
+  chipsEl.innerHTML = cats.map(c => `<button class="chip" data-id="${esc(c.id)}">${esc(c.nome.replace(/\s*\(.*\)$/, ''))}</button>`).join('');
+  chipsEl.addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    const alvo = document.getElementById('cat-' + b.dataset.id);
+    if (alvo) alvo.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  });
+
+  const conteudo = document.getElementById('conteudo');
+  function render(filtro) {
+    const f = norm(filtro).trim();
+    let html = '', secaoAtual = null, achou = 0;
+    for (const c of cats) {
+      const itens = produtos.filter(p => p.cat === c.id && (!f || norm(p.nome + ' ' + p.desc + ' ' + c.nome).includes(f)));
+      if (!itens.length) continue;
+      if (c.secao && c.secao !== secaoAtual) { secaoAtual = c.secao; html += `<h2 class="secao-titulo">${esc(c.secao)}</h2>`; }
+      achou += itens.length;
+      html += `<section class="cat" id="cat-${esc(c.id)}" data-id="${esc(c.id)}">
+        <h2><span class="etiqueta">${esc(c.nome)}</span></h2>
+        ${c.obs ? `<p class="obs">${esc(c.obs)}</p>` : ''}
+        <div class="lista">${itens.map(item).join('')}</div>
+      </section>`;
+    }
+    conteudo.innerHTML = achou ? html : `<p class="vazio">Nada encontrado para “${esc(filtro)}”.</p>`;
+    observar();
+  }
+  function item(p) {
+    const esgotado = p.qtd === 0;
+    const foto = p.foto ? `<button class="foto" data-id="${esc(p.id)}" aria-label="Ver foto de ${esc(p.nome)}"><img src="${esc(p.foto)}" alt="" loading="lazy"></button>` : '';
+    return `<div class="item${p.foto ? '' : ' sem-foto'}${esgotado ? ' esgotado' : ''}">
+      ${foto}
+      <div><div class="nome">${esc(p.nome)}${esgotado ? '<span class="tag-esgotado">Esgotado</span>' : ''}</div>${p.desc ? `<div class="desc">${esc(p.desc)}</div>` : ''}</div>
+      <div class="preco"><small>R$</small>${brl(Number(p.preco) || 0)}</div>
+    </div>`;
+  }
+
+  const zoom = document.getElementById('zoom');
+  conteudo.addEventListener('click', e => {
+    const b = e.target.closest('.foto'); if (!b) return;
+    const p = produtos.find(x => x.id === b.dataset.id); if (!p) return;
+    document.getElementById('zoomFoto').innerHTML = `<img src="${esc(p.foto)}" alt="${esc(p.nome)}">`;
+    document.getElementById('zoomNome').textContent = p.nome + ' — R$ ' + brl(Number(p.preco) || 0);
+    document.getElementById('zoomDesc').textContent = p.desc || '';
+    zoom.showModal();
+  });
+  zoom.addEventListener('click', e => { if (e.target === zoom) zoom.close(); });
+
+  // Destaca o chip da categoria visível
+  let obs;
+  function observar() {
+    if (obs) obs.disconnect();
+    obs = new IntersectionObserver(ents => {
+      ents.forEach(en => {
+        if (!en.isIntersecting) return;
+        chipsEl.querySelectorAll('.chip').forEach(ch => {
+          const on = ch.dataset.id === en.target.dataset.id;
+          ch.classList.toggle('ativo', on);
+          if (on) chipsEl.scrollTo({ left: ch.offsetLeft - 16, behavior: 'smooth' });
+        });
+      });
+    }, { rootMargin: '-140px 0px -60% 0px' });
+    conteudo.querySelectorAll('section.cat').forEach(s => obs.observe(s));
+  }
+
+  const nav = document.getElementById('nav');
+  new IntersectionObserver(([e]) => nav.classList.toggle('preso', e.intersectionRatio < 1), { threshold: [1], rootMargin: '-1px 0px 0px 0px' }).observe(nav);
+
+  document.getElementById('busca').addEventListener('input', e => render(e.target.value));
+  render('');
+})();
+</script>
+</body>
+</html>

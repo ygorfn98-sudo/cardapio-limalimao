@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel LimaLimão</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="../assets/tema.css">
+<style>
+  body { background: var(--creme-2); }
+  .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+
+  aside.menu { background: var(--oliva); color: #f3eedf; padding: 22px 14px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 4px; }
+  aside .marca { color: #fff; font-size: 1.9rem; padding: 0 10px; }
+  aside .marca-sub { color: var(--pessego); font-size: 1.3rem; padding: 0 10px 18px; }
+  aside button.aba {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; cursor: pointer;
+    background: transparent; color: #e7e2cf; padding: 11px 12px; border-radius: 10px; font-weight: 700;
+  }
+  aside button.aba:hover { background: rgba(255, 255, 255, .08); }
+  aside button.aba.ativa { background: var(--laranja); color: #fff; }
+  aside button.aba svg { width: 19px; height: 19px; flex: none; }
+  aside .badge { margin-left: auto; background: var(--alerta); color: #fff; border-radius: 99px; font-size: .72rem; padding: 1px 7px; }
+  aside .rodape-menu { margin-top: auto; font-size: .78rem; color: #c9c4ad; padding: 10px; line-height: 1.5; }
+  aside .rodape-menu a { color: #fff; }
+  .sync { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .sync::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #8fbf4f; flex: none; }
+  .sync[data-s="salvando"]::before { background: var(--pessego); }
+  .sync[data-s="erro"]::before { background: #ff7a5c; }
+  .sync[data-s="local"]::before { background: #c9c4ad; }
+  .sair { display: block; margin-top: 8px; border: 1px solid rgba(255,255,255,.25); background: transparent; color: #e7e2cf; border-radius: 8px; padding: 5px 12px; cursor: pointer; font-weight: 700; font-size: .8rem; }
+  .sair:hover { background: rgba(255,255,255,.08); }
+
+  .login { min-height: 100vh; display: grid; place-items: center; padding: 16px;
+    background: radial-gradient(40rem 22rem at 100% 0%, rgba(245,155,94,.3), transparent 70%), var(--creme); }
+  .login form { width: min(360px, 100%); background: var(--papel); border: 1px solid var(--linha); border-radius: 20px; padding: 28px 26px; box-shadow: var(--sombra); display: flex; flex-direction: column; gap: 12px; }
+  .login .marca { font-size: 2.4rem; text-align: center; }
+  .login .marca-sub { font-size: 1.3rem; text-align: center; margin-bottom: 8px; }
+  .login .erro { color: var(--alerta); font-size: .85rem; font-weight: 700; min-height: 1.2em; margin: 0; }
+  .login button { justify-content: center; padding: 11px; }
+
+  main { padding: 26px 30px 60px; min-width: 0; }
+  .cab { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .cab h1 { font-family: var(--serif); font-weight: 400; color: var(--oliva); font-size: 2rem; margin: 0; margin-right: auto; }
+
+  .btn { border: 1px solid var(--linha); background: var(--papel); padding: 9px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--tinta); }
+  .btn:hover { border-color: var(--pessego); }
+  .btn.prim { background: var(--laranja); border-color: var(--laranja); color: #fff; }
+  .btn.prim:hover { background: var(--laranja-escuro); }
+  .btn.verde { background: var(--oliva); border-color: var(--oliva); color: #fff; }
+  .btn.perigo { color: var(--alerta); }
+  .btn.peq { padding: 6px 10px; font-size: .85rem; }
+
+  .filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .campo, .filtros input, .filtros select {
+    padding: 9px 12px; border-radius: 10px; border: 1px solid var(--linha); background: var(--papel); outline: none;
+  }
+  .filtros input { min-width: 240px; flex: 1; max-width: 360px; }
+  .campo:focus, .filtros input:focus, .filtros select:focus { border-color: var(--pessego); box-shadow: 0 0 0 3px rgba(245, 155, 94, .22); }
+
+  .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .card { background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); padding: 14px 16px; }
+  .card .rot { font-size: .8rem; color: var(--tinta-2); font-weight: 700; }
+  .card .val { font-size: 1.7rem; font-weight: 800; color: var(--oliva); font-variant-numeric: tabular-nums; }
+  .card.alerta .val { color: var(--alerta); }
+
+  table.tab { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); overflow: hidden; }
+  .tab th { text-align: left; font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; color: var(--tinta-2); padding: 10px 12px; background: #fbf1e4; border-bottom: 1px solid var(--linha); }
+  .tab td { padding: 9px 12px; border-bottom: 1px solid var(--linha); vertical-align: middle; }
+  .tab tr:last-child td { border-bottom: 0; }
+  .tab tr.grupo td { background: #fdf6ec; font-family: var(--serif); color: var(--oliva); font-size: 1.05rem; padding-top: 12px; }
+  .tab tr.inativo td:not(:last-child) { opacity: .5; }
+  .tab .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .thumb { width: 46px; height: 46px; border-radius: 10px; object-fit: cover; background: var(--creme); display: grid; place-items: center; color: var(--pessego); font-family: var(--serif); font-size: 1.3rem; border: 0; padding: 0; cursor: pointer; overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .nm b { display: block; }
+  .nm span { font-size: .8rem; color: var(--tinta-2); }
+
+  .qtd { display: inline-flex; align-items: center; border: 1px solid var(--linha); border-radius: 10px; overflow: hidden; background: #fff; }
+  .qtd button { border: 0; background: transparent; width: 32px; height: 32px; cursor: pointer; font-size: 1.1rem; font-weight: 800; color: var(--oliva); }
+  .qtd button:hover { background: var(--creme); }
+  .qtd input { width: 58px; border: 0; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; outline: none; background: transparent; padding: 0; height: 32px; }
+  .qtd.baixo { border-color: var(--aviso); background: #fff6e6; }
+  .qtd.zero { border-color: var(--alerta); background: #fdecea; }
+  .livre { color: var(--tinta-2); font-size: .82rem; }
+  .st { font-size: .72rem; font-weight: 800; padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
+  .st.ok { background: #e8f0dc; color: var(--ok); }
+  .st.baixo { background: #fdf0d9; color: #a5620b; }
+  .st.zero { background: #fbe2dd; color: var(--alerta); }
+  .st.venc { background: #fbe2dd; color: var(--alerta); }
+
+  .switch { position: relative; width: 40px; height: 22px; display: inline-block; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: #d8cfbf; border-radius: 99px; transition: background .15s; cursor: pointer; }
+  .switch span::after { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .15s; }
+  .switch input:checked + span { background: var(--ok); }
+  .switch input:checked + span::after { transform: translateX(18px); }
+  .switch input:focus-visible + span { outline: 2px solid var(--pessego); outline-offset: 2px; }
+
+  .acoes-linha { display: flex; gap: 4px; justify-content: flex-end; }
+  .ic { border: 0; background: transparent; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; color: var(--tinta-2); display: grid; place-items: center; }
+  .ic:hover { background: var(--creme); color: var(--oliva); }
+  .ic.del:hover { color: var(--alerta); }
+  .ic svg { width: 17px; height: 17px; }
+  .vazio { padding: 40px; text-align: center; color: var(--tinta-2); }
+
+  /* Modal */
+  dialog.modal { border: 0; border-radius: 18px; padding: 0; width: min(560px, 94vw); background: var(--papel); box-shadow: 0 30px 80px -20px rgba(0,0,0,.35); }
+  dialog.modal::backdrop { background: rgba(43, 42, 31, .5); }
+  .modal header { padding: 18px 22px 6px; font-family: var(--serif); font-size: 1.5rem; color: var(--oliva); }
+  .modal .corpo { padding: 8px 22px 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal footer { padding: 14px 22px 18px; display: flex; gap: 8px; justify-content: flex-end; }
+  .f { display: flex; flex-direction: column; gap: 5px; font-size: .82rem; font-weight: 700; color: var(--tinta-2); }
+  .f.full { grid-column: 1 / -1; }
+  .f .campo { font-weight: 400; color: var(--tinta); font-size: .95rem; }
+  .f textarea.campo { resize: vertical; min-height: 64px; }
+  .f.check { flex-direction: row; align-items: center; gap: 8px; color: var(--tinta); }
+  .foto-up { display: flex; gap: 12px; align-items: center; }
+  .foto-up .prev { width: 88px; height: 88px; border-radius: 14px; background: var(--creme); display: grid; place-items: center; overflow: hidden; color: var(--tinta-2); font-size: .75rem; text-align: center; flex: none; border: 1px dashed var(--pessego); }
+  .foto-up .prev img { width: 100%; height: 100%; object-fit: cover; }
+  .foto-up .bts { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+  .dica { font-size: .78rem; color: var(--tinta-2); font-weight: 400; }
+
+  /* QR */
+  .qr-grid { display: grid; grid-template-columns: minmax(280px, 420px) 1fr; gap: 22px; align-items: start; }
+  .placa {
+    width: 340px; background: var(--creme); border-radius: 22px; padding: 26px 24px 22px; text-align: center; border: 1px solid var(--linha);
+    background-image: radial-gradient(18rem 10rem at 100% 0%, rgba(245,155,94,.3), transparent 70%);
+  }
+  .placa .marca { font-size: 2.3rem; }
+  .placa .marca-sub { font-size: 1.35rem; }
+  .placa h3 { font-family: var(--serif); font-weight: 400; color: var(--oliva); font-size: 1.6rem; margin: 12px 0 12px; }
+  .placa #qr { background: #fff; padding: 14px; border-radius: 16px; display: inline-block; }
+  .placa #qr img, .placa #qr canvas { width: 220px !important; height: 220px !important; }
+  .placa p { margin: 12px 0 0; font-weight: 700; color: var(--tinta-2); font-size: .9rem; }
+
+  .painel-sec { background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); padding: 18px 20px; margin-bottom: 14px; }
+  .painel-sec h2 { margin: 0 0 6px; font-size: 1.1rem; color: var(--oliva); }
+  .painel-sec p { margin: 0 0 12px; color: var(--tinta-2); font-size: .92rem; line-height: 1.5; }
+  .painel-sec .linha-bts { display: flex; gap: 8px; flex-wrap: wrap; }
+  ol.passos { margin: 0; padding-left: 20px; color: var(--tinta-2); line-height: 1.7; font-size: .92rem; }
+
+  .mov { font-size: .85rem; }
+  .mov .mais { color: var(--ok); font-weight: 800; }
+  .mov .menos { color: var(--alerta); font-weight: 800; }
+
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0; background: var(--oliva); color: #fff; padding: 11px 18px; border-radius: 12px; font-weight: 700; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 50; }
+  .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; }
+    aside.menu { position: static; height: auto; flex-direction: row; flex-wrap: wrap; padding: 12px; }
+    aside .marca, aside .marca-sub, aside .rodape-menu { display: none; }
+    aside button.aba { width: auto; }
+    main { padding: 18px 16px 60px; }
+    .qr-grid { grid-template-columns: 1fr; }
+    .tab .esc-m { display: none; }
+  }
+  @media print {
+    body * { visibility: hidden; }
+    .placa, .placa * { visibility: visible; }
+    .placa { position: absolute; left: 0; top: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="login" id="login" hidden>
+  <form>
+    <div class="marca">LimaLimão</div>
+    <div class="marca-sub">Painel da loja</div>
+    <label class="f">E-mail<input class="campo" name="email" type="email" autocomplete="username" required></label>
+    <label class="f">Senha<input class="campo" name="senha" type="password" autocomplete="current-password" required></label>
+    <p class="erro"></p>
+    <button class="btn prim">Entrar</button>
+  </form>
+</div>
+<div class="app">
+  <aside class="menu">
+    <div class="marca">LimaLimão</div>
+    <div class="marca-sub">Painel da loja</div>
+    <button class="aba" data-aba="cardapio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Cardápio</button>
+    <button class="aba" data-aba="estoque"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/></svg>Estoque<span class="badge" id="badgeEstoque" hidden></span></button>
+    <button class="aba" data-aba="categorias"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Categorias</button>
+    <button class="aba" data-aba="qr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>QR Code</button>
+    <button class="aba" data-aba="publicar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg>Publicar e backup</button>
+    <div class="rodape-menu"><span class="sync" id="sync"></span><a href="../index.html?preview=1" target="_blank">Ver cardápio (prévia)</a><button class="sair" id="sair" hidden>Sair</button></div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<dialog class="modal" id="modal"><form method="dialog" id="modalForm"></form></dialog>
+<input type="file" id="arquivo" accept="image/*" hidden>
+<input type="file" id="arquivoBackup" accept=".json,application/json" hidden>
+<div class="toast" id="toast"></div>
+
+<script src="../dados/cardapio.js"></script>
+<script src="../assets/config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(async function () {
+  const K = { cardapio: 'limalima.cardapio', estoque: 'limalima.estoque', movs: 'limalima.movs', cfg: 'limalima.cfg' };
+  const DOC = { [K.cardapio]: 'cardapio', [K.estoque]: 'estoque', [K.movs]: 'movs' };
+  const conf = window.SUPABASE || {};
+  const configurado = !!(conf.url && conf.chave);
+  const NUVEM = configurado && window.supabase ? window.supabase.createClient(conf.url, conf.chave) : null;
+
+  const ler = (k, padrao) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? padrao; } catch (e) { return padrao; } };
+  function gravar(k, v) {
+    if (NUVEM && DOC[k]) agendarEnvio(k, v);
+    try { localStorage.setItem(k, JSON.stringify(v)); return true; }
+    catch (e) { if (!NUVEM) toast('Sem espaço para salvar. Use fotos menores ou remova algumas.'); return false; }
+  }
+
+  // ---------- Sincronização com o Supabase ----------
+  const pendentes = new Map();
+  let timerEnvio;
+  function agendarEnvio(k, v) {
+    pendentes.set(k, v); statusNuvem('salvando');
+    clearTimeout(timerEnvio); timerEnvio = setTimeout(enviarPendentes, 700);
+  }
+  async function enviarPendentes() {
+    if (!pendentes.size) return;
+    const lote = [...pendentes]; pendentes.clear();
+    const agora = new Date().toISOString();
+    const { error } = await NUVEM.from('documentos').upsert(lote.map(([k, v]) => ({ id: DOC[k], dados: v, atualizado: agora })));
+    if (error) {
+      lote.forEach(([k, v]) => { if (!pendentes.has(k)) pendentes.set(k, v); });
+      statusNuvem('erro'); timerEnvio = setTimeout(enviarPendentes, 15000);
+    } else if (!pendentes.size) statusNuvem('ok');
+  }
+  function statusNuvem(s) {
+    const el = document.getElementById('sync'); if (!el) return;
+    el.dataset.s = s;
+    el.textContent = { ok: 'Salvo na nuvem', salvando: 'Salvando…', erro: 'Sem conexão — salvo neste PC, tentando de novo', local: 'Modo local: dados só neste computador' }[s];
+  }
+  addEventListener('beforeunload', e => { if (pendentes.size) { e.preventDefault(); e.returnValue = ''; } });
+
+  async function enviarFoto(dataUrl) {
+    if (!NUVEM) return dataUrl;
+    const blob = await (await fetch(dataUrl)).blob();
+    const nome = Date.now().toString(36) + Math.random().toString(36).slice(2, 8) + '.jpg';
+    const { error } = await NUVEM.storage.from('fotos').upload(nome, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
+    if (error) { toast('Não consegui enviar a foto. Verifique a internet.'); return null; }
+    return NUVEM.storage.from('fotos').getPublicUrl(nome).data.publicUrl;
+  }
+
+  function telaLogin(msg) {
+    document.querySelector('.app').hidden = true;
+    const box = document.getElementById('login'); box.hidden = false;
+    box.querySelector('.erro').textContent = msg || '';
+    return new Promise(res => {
+      box.querySelector('form').onsubmit = async e => {
+        e.preventDefault();
+        const bt = box.querySelector('button'); bt.disabled = true; bt.textContent = 'Entrando…';
+        const { error } = await NUVEM.auth.signInWithPassword({ email: box.querySelector('[name=email]').value.trim(), password: box.querySelector('[name=senha]').value });
+        bt.disabled = false; bt.textContent = 'Entrar';
+        if (error) { box.querySelector('.erro').textContent = 'E-mail ou senha incorretos.'; return; }
+        box.hidden = true; document.querySelector('.app').hidden = false; res();
+      };
+    });
+  }
+
+  const ESTOQUE_INICIAL = [
+    { id: 'e1', nome: 'Refrigerante lata', cat: 'Bebidas', un: 'un', qtd: 0, min: 12, custo: 0, validade: '', fornecedor: '', foto: '' },
+    { id: 'e2', nome: 'Coca 600 ml', cat: 'Bebidas', un: 'un', qtd: 0, min: 6, custo: 0, validade: '', fornecedor: '', foto: '' },
+    { id: 'e3', nome: 'Farinha de trigo', cat: 'Insumos', un: 'kg', qtd: 0, min: 5, custo: 0, validade: '', fornecedor: '', foto: '' },
+    { id: 'e4', nome: 'Leite condensado', cat: 'Insumos', un: 'un', qtd: 0, min: 4, custo: 0, validade: '', fornecedor: '', foto: '' },
+    { id: 'e5', nome: 'Copo 300 ml (açaí)', cat: 'Embalagens', un: 'pct', qtd: 0, min: 2, custo: 0, validade: '', fornecedor: '', foto: '' }
+  ];
+
+  let dados = ler(K.cardapio, null) || JSON.parse(JSON.stringify(window.CARDAPIO));
+  let estoque = ler(K.estoque, null) || ESTOQUE_INICIAL;
+  let movs = ler(K.movs, []);
+  let cfg = ler(K.cfg, { url: '', aba: 'cardapio' });
+  const salvarCardapio = () => gravar(K.cardapio, dados);
+  const salvarEstoque = () => gravar(K.estoque, estoque);
+  const salvarCfg = () => gravar(K.cfg, cfg);
+
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const brl = n => (Number(n) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const num = v => { const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; };
+  const novoId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const hoje = () => new Date().toISOString().slice(0, 10);
+  const main = $('#main');
+
+  let tt;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2400); }
+
+  const IC = {
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></svg>',
+    del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+    up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 15 6-6 6 6"/></svg>',
+    down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>'
+  };
+
+  // ---------- Fotos: redimensiona para caber no armazenamento do navegador ----------
+  function escolherFoto() {
+    return new Promise(res => {
+      const inp = $('#arquivo'); inp.value = '';
+      inp.onchange = () => {
+        const f = inp.files[0]; if (!f) return res(null);
+        const img = new Image();
+        img.onload = () => {
+          const max = 640, r = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas'); c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          URL.revokeObjectURL(img.src);
+          res(enviarFoto(c.toDataURL('image/jpeg', 0.78)));
+        };
+        img.onerror = () => { toast('Não consegui abrir essa imagem.'); res(null); };
+        img.src = URL.createObjectURL(f);
+      };
+      inp.click();
+    });
+  }
+
+  // ---------- Navegação ----------
+  const abas = { cardapio: telaCardapio, estoque: telaEstoque, categorias: telaCategorias, qr: telaQR, publicar: telaPublicar };
+  document.querySelectorAll('aside .aba').forEach(b => b.addEventListener('click', () => ir(b.dataset.aba)));
+  function ir(aba) {
+    cfg.aba = abas[aba] ? aba : 'cardapio'; salvarCfg();
+    document.querySelectorAll('aside .aba').forEach(b => b.classList.toggle('ativa', b.dataset.aba === cfg.aba));
+    abas[cfg.aba]();
+    atualizarBadge();
+  }
+  function statusEstoque(i) {
+    if (i.validade && i.validade < hoje()) return 'venc';
+    if (num(i.qtd) <= 0) return 'zero';
+    if (num(i.qtd) <= num(i.min)) return 'baixo';
+    return 'ok';
+  }
+  function atualizarBadge() {
+    const n = estoque.filter(i => statusEstoque(i) !== 'ok').length;
+    const b = $('#badgeEstoque'); b.hidden = !n; b.textContent = n;
+  }
+  function qtdCtrl(id, qtd, classe, tipo) {
+    return `<div class="qtd ${classe}" data-tipo="${tipo}" data-id="${esc(id)}">
+      <button type="button" data-d="-1" aria-label="Diminuir">−</button>
+      <input inputmode="decimal" value="${esc(qtd)}" aria-label="Quantidade">
+      <button type="button" data-d="1" aria-label="Aumentar">+</button></div>`;
+  }
+
+  // ============ CARDÁPIO ============
+  let filtroCard = { q: '', cat: '' };
+  function telaCardapio() {
+    const ps = dados.produtos;
+    const esgot = ps.filter(p => p.qtd === 0).length;
+    const ocultos = ps.filter(p => p.ativo === false).length;
+    const comFoto = ps.filter(p => p.foto).length;
+    main.innerHTML = `
+      <div class="cab"><h1>Cardápio</h1>
+        <a class="btn" href="../index.html?preview=1" target="_blank">Ver prévia</a>
+        <button class="btn prim" id="novoProd">+ Novo produto</button></div>
+      <div class="resumo">
+        <div class="card"><div class="rot">Produtos</div><div class="val">${ps.length}</div></div>
+        <div class="card ${esgot ? 'alerta' : ''}"><div class="rot">Esgotados</div><div class="val">${esgot}</div></div>
+        <div class="card"><div class="rot">Ocultos do cardápio</div><div class="val">${ocultos}</div></div>
+        <div class="card"><div class="rot">Com foto</div><div class="val">${comFoto}/${ps.length}</div></div>
+      </div>
+      <div class="filtros">
+        <input type="search" id="q" placeholder="Buscar produto" value="${esc(filtroCard.q)}">
+        <select id="fcat"><option value="">Todas as categorias</option>${dados.categorias.map(c => `<option value="${esc(c.id)}" ${filtroCard.cat === c.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</select>
+      </div>
+      <div id="tabela"></div>`;
+    $('#novoProd').onclick = () => formProduto();
+    $('#q').oninput = e => { filtroCard.q = e.target.value; tabelaProdutos(); };
+    $('#fcat').onchange = e => { filtroCard.cat = e.target.value; tabelaProdutos(); };
+    tabelaProdutos();
+  }
+  function tabelaProdutos() {
+    const f = norm(filtroCard.q);
+    let html = '';
+    for (const c of dados.categorias) {
+      if (filtroCard.cat && filtroCard.cat !== c.id) continue;
+      const itens = dados.produtos.filter(p => p.cat === c.id && (!f || norm(p.nome + ' ' + p.desc).includes(f)));
+      if (!itens.length) continue;
+      html += `<tr class="grupo"><td colspan="6">${esc(c.nome)}</td></tr>`;
+      html += itens.map(p => {
+        const controla = p.qtd !== null && p.qtd !== undefined && p.qtd !== '';
+        const cls = !controla ? '' : p.qtd === 0 ? 'zero' : (p.min && p.qtd <= p.min ? 'baixo' : '');
+        return `<tr class="${p.ativo === false ? 'inativo' : ''}" data-id="${esc(p.id)}">
+          <td style="width:62px"><button class="thumb" data-acao="foto" title="Trocar foto">${p.foto ? `<img src="${esc(p.foto)}" alt="">` : esc(p.nome[0] || '?')}</button></td>
+          <td class="nm"><b>${esc(p.nome)}</b>${p.desc ? `<span>${esc(p.desc)}</span>` : ''}</td>
+          <td class="num"><b>${brl(p.preco)}</b></td>
+          <td>${controla ? qtdCtrl(p.id, p.qtd, cls, 'prod') : `<span class="livre">Sem controle</span>`}</td>
+          <td class="esc-m"><label class="switch" title="Mostrar no cardápio"><input type="checkbox" data-acao="ativo" ${p.ativo !== false ? 'checked' : ''}><span></span></label></td>
+          <td><div class="acoes-linha"><button class="ic" data-acao="editar" title="Editar">${IC.edit}</button><button class="ic del" data-acao="excluir" title="Excluir">${IC.del}</button></div></td>
+        </tr>`;
+      }).join('');
+    }
+    $('#tabela').innerHTML = html
+      ? `<table class="tab"><thead><tr><th></th><th>Produto</th><th class="num">Preço</th><th>Quantidade</th><th class="esc-m">No cardápio</th><th></th></tr></thead><tbody>${html}</tbody></table>`
+      : '<div class="vazio">Nenhum produto encontrado.</div>';
+  }
+  main.addEventListener('click', async e => {
+    const b = e.target.closest('[data-acao]'); if (!b) return;
+    const tr = b.closest('tr[data-id]'); if (!tr) return;
+    const lista = cfg.aba === 'estoque' ? estoque : dados.produtos;
+    const it = lista.find(x => x.id === tr.dataset.id); if (!it) return;
+    const acao = b.dataset.acao;
+    if (acao === 'editar') cfg.aba === 'estoque' ? formEstoque(it) : formProduto(it);
+    if (acao === 'foto') { const f = await escolherFoto(); if (f) { it.foto = f; salvarTudo(); ir(cfg.aba); toast('Foto atualizada'); } }
+    if (acao === 'excluir' && confirm(`Excluir "${it.nome}"?`)) { lista.splice(lista.indexOf(it), 1); salvarTudo(); ir(cfg.aba); toast('Excluído'); }
+  });
+  main.addEventListener('change', e => {
+    if (e.target.dataset.acao === 'ativo') {
+      const p = dados.produtos.find(x => x.id === e.target.closest('tr').dataset.id);
+      p.ativo = e.target.checked; salvarCardapio(); toast(p.ativo ? 'Visível no cardápio' : 'Oculto do cardápio');
+    }
+    const q = e.target.closest('.qtd'); if (q && e.target.tagName === 'INPUT') definirQtd(q, num(e.target.value));
+  });
+  main.addEventListener('click', e => {
+    const b = e.target.closest('.qtd button'); if (!b) return;
+    const q = b.closest('.qtd'); definirQtd(q, num(q.querySelector('input').value) + Number(b.dataset.d));
+  });
+  function definirQtd(q, valor) {
+    valor = Math.max(0, Math.round(valor * 1000) / 1000);
+    const lista = q.dataset.tipo === 'est' ? estoque : dados.produtos;
+    const it = lista.find(x => x.id === q.dataset.id); if (!it) return;
+    const antes = num(it.qtd);
+    if (antes === valor) return;
+    it.qtd = valor;
+    registrarMov(it.nome, valor - antes, q.dataset.tipo);
+    salvarTudo();
+    ir(cfg.aba);
+  }
+  function registrarMov(nome, delta, tipo) {
+    movs.unshift({ quando: new Date().toISOString(), nome, delta, tipo });
+    movs = movs.slice(0, 300); gravar(K.movs, movs);
+  }
+  function salvarTudo() { salvarCardapio(); salvarEstoque(); }
+
+  function abrirModal(html, aoSalvar) {
+    const m = $('#modal'), f = $('#modalForm');
+    f.innerHTML = html;
+    f.onsubmit = e => { if (e.submitter && e.submitter.value === 'ok') { if (aoSalvar(new FormData(f)) === false) e.preventDefault(); } };
+    m.showModal();
+    const primeiro = f.querySelector('input:not([type=hidden]), textarea, select'); if (primeiro) primeiro.focus();
+    return f;
+  }
+  function blocoFoto(foto) {
+    return `<div class="f full"><span>Foto</span><div class="foto-up">
+      <div class="prev" id="prevFoto">${foto ? `<img src="${esc(foto)}" alt="">` : 'Sem foto'}</div>
+      <div class="bts"><button type="button" class="btn peq" id="btFoto">Escolher foto</button>
+      <button type="button" class="btn peq perigo" id="btTiraFoto" ${foto ? '' : 'hidden'}>Remover foto</button>
+      <span class="dica">JPG ou PNG. A foto é reduzida automaticamente.</span></div></div></div>`;
+  }
+  function ligarFoto(f, estado) {
+    f.querySelector('#btFoto').onclick = async () => {
+      const ft = await escolherFoto(); if (!ft) return;
+      estado.foto = ft; f.querySelector('#prevFoto').innerHTML = `<img src="${ft}" alt="">`; f.querySelector('#btTiraFoto').hidden = false;
+    };
+    f.querySelector('#btTiraFoto').onclick = () => { estado.foto = ''; f.querySelector('#prevFoto').textContent = 'Sem foto'; f.querySelector('#btTiraFoto').hidden = true; };
+  }
+
+  function formProduto(p) {
+    const novo = !p;
+    p = p || { id: novoId('p'), cat: filtroCard.cat || dados.categorias[0]?.id, nome: '', desc: '', preco: '', foto: '', qtd: null, min: '', ativo: true };
+    const estado = { foto: p.foto };
+    const controla = p.qtd !== null && p.qtd !== undefined && p.qtd !== '';
+    const f = abrirModal(`
+      <header>${novo ? 'Novo produto' : 'Editar produto'}</header>
+      <div class="corpo">
+        <label class="f full">Nome<input class="campo" name="nome" required value="${esc(p.nome)}"></label>
+        <label class="f">Categoria<select class="campo" name="cat">${dados.categorias.map(c => `<option value="${esc(c.id)}" ${c.id === p.cat ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</select></label>
+        <label class="f">Preço (R$)<input class="campo" name="preco" inputmode="decimal" required value="${p.preco === '' ? '' : String(p.preco).replace('.', ',')}"></label>
+        <label class="f full">Descrição<textarea class="campo" name="desc">${esc(p.desc)}</textarea></label>
+        ${blocoFoto(p.foto)}
+        <label class="f check full"><input type="checkbox" name="controla" id="chkControla" ${controla ? 'checked' : ''}> Controlar quantidade (fica “Esgotado” no cardápio quando chegar a zero)</label>
+        <label class="f qtdF">Quantidade disponível<input class="campo" name="qtd" inputmode="decimal" value="${controla ? esc(p.qtd) : ''}"></label>
+        <label class="f qtdF">Avisar quando ficar abaixo de<input class="campo" name="min" inputmode="decimal" value="${esc(p.min ?? '')}"></label>
+        <label class="f check full"><input type="checkbox" name="ativo" ${p.ativo !== false ? 'checked' : ''}> Mostrar no cardápio</label>
+      </div>
+      <footer><button type="button" class="btn" onclick="this.closest('dialog').close()">Cancelar</button><button class="btn prim" value="ok">Salvar</button></footer>`,
+      fd => {
+        const ctrl = fd.get('controla') === 'on';
+        Object.assign(p, {
+          nome: fd.get('nome').trim(), cat: fd.get('cat'), preco: num(fd.get('preco')), desc: fd.get('desc').trim(),
+          foto: estado.foto, qtd: ctrl ? num(fd.get('qtd')) : null, min: ctrl && fd.get('min') !== '' ? num(fd.get('min')) : '',
+          ativo: fd.get('ativo') === 'on'
+        });
+        if (novo) dados.produtos.push(p);
+        salvarCardapio(); ir('cardapio'); toast('Produto salvo');
+      });
+    ligarFoto(f, estado);
+    const chk = f.querySelector('#chkControla');
+    const sync = () => f.querySelectorAll('.qtdF').forEach(el => el.style.display = chk.checked ? '' : 'none');
+    chk.onchange = sync; sync();
+  }
+
+  // ============ ESTOQUE ============
+  let filtroEst = { q: '', cat: '', st: '' };
+  function telaEstoque() {
+    const cats = [...new Set(estoque.map(i => i.cat).filter(Boolean))].sort();
+    const baixo = estoque.filter(i => statusEstoque(i) === 'baixo').length;
+    const zero = estoque.filter(i => statusEstoque(i) === 'zero').length;
+    const venc = estoque.filter(i => statusEstoque(i) === 'venc').length;
+    const valor = estoque.reduce((s, i) => s + num(i.qtd) * num(i.custo), 0);
+    main.innerHTML = `
+      <div class="cab"><h1>Estoque</h1>
+        <button class="btn" id="verMovs">Movimentações</button>
+        <button class="btn prim" id="novoEst">+ Novo item</button></div>
+      <div class="resumo">
+        <div class="card"><div class="rot">Itens</div><div class="val">${estoque.length}</div></div>
+        <div class="card ${baixo ? 'alerta' : ''}"><div class="rot">Estoque baixo</div><div class="val">${baixo}</div></div>
+        <div class="card ${zero ? 'alerta' : ''}"><div class="rot">Em falta</div><div class="val">${zero}</div></div>
+        <div class="card ${venc ? 'alerta' : ''}"><div class="rot">Vencidos</div><div class="val">${venc}</div></div>
+        <div class="card"><div class="rot">Valor em estoque</div><div class="val" style="font-size:1.35rem">${brl(valor)}</div></div>
+      </div>
+      <div class="filtros">
+        <input type="search" id="q" placeholder="Buscar item" value="${esc(filtroEst.q)}">
+        <select id="fcat"><option value="">Todas as categorias</option>${cats.map(c => `<option ${filtroEst.cat === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+        <select id="fst">
+          <option value="">Todos</option>
+          <option value="alerta" ${filtroEst.st === 'alerta' ? 'selected' : ''}>Precisa comprar</option>
+          <option value="ok" ${filtroEst.st === 'ok' ? 'selected' : ''}>Em dia</option>
+        </select>
+      </div>
+      <div id="tabela"></div>`;
+    $('#novoEst').onclick = () => formEstoque();
+    $('#verMovs').onclick = verMovs;
+    $('#q').oninput = e => { filtroEst.q = e.target.value; tabelaEstoque(); };
+    $('#fcat').onchange = e => { filtroEst.cat = e.target.value; tabelaEstoque(); };
+    $('#fst').onchange = e => { filtroEst.st = e.target.value; tabelaEstoque(); };
+    tabelaEstoque();
+  }
+  function tabelaEstoque() {
+    const f = norm(filtroEst.q);
+    const rot = { ok: 'Em dia', baixo: 'Baixo', zero: 'Em falta', venc: 'Vencido' };
+    const itens = estoque
+      .filter(i => (!f || norm(i.nome + ' ' + i.fornecedor).includes(f)) && (!filtroEst.cat || i.cat === filtroEst.cat))
+      .filter(i => !filtroEst.st || (filtroEst.st === 'ok' ? statusEstoque(i) === 'ok' : statusEstoque(i) !== 'ok'))
+      .sort((a, b) => (a.cat || '').localeCompare(b.cat || '') || a.nome.localeCompare(b.nome));
+    let grupo = null;
+    const linhas = itens.map(i => {
+      const st = statusEstoque(i);
+      let h = '';
+      if (i.cat !== grupo) { grupo = i.cat; h += `<tr class="grupo"><td colspan="7">${esc(grupo || 'Sem categoria')}</td></tr>`; }
+      const val = i.validade ? new Date(i.validade + 'T12:00').toLocaleDateString('pt-BR') : '';
+      return h + `<tr data-id="${esc(i.id)}">
+        <td style="width:62px"><button class="thumb" data-acao="foto" title="Trocar foto">${i.foto ? `<img src="${esc(i.foto)}" alt="">` : esc(i.nome[0] || '?')}</button></td>
+        <td class="nm"><b>${esc(i.nome)}</b><span>${[i.fornecedor, val && 'Validade ' + val].filter(Boolean).map(esc).join(' · ')}</span></td>
+        <td>${qtdCtrl(i.id, i.qtd, st === 'zero' ? 'zero' : st === 'baixo' ? 'baixo' : '', 'est')} <span class="livre">${esc(i.un)}</span></td>
+        <td class="num esc-m">${esc(i.min)} ${esc(i.un)}</td>
+        <td class="num esc-m">${i.custo ? brl(i.custo) : '—'}</td>
+        <td><span class="st ${st}">${rot[st]}</span></td>
+        <td><div class="acoes-linha"><button class="ic" data-acao="editar" title="Editar">${IC.edit}</button><button class="ic del" data-acao="excluir" title="Excluir">${IC.del}</button></div></td>
+      </tr>`;
+    }).join('');
+    $('#tabela').innerHTML = itens.length
+      ? `<table class="tab"><thead><tr><th></th><th>Item</th><th>Quantidade</th><th class="num esc-m">Mínimo</th><th class="num esc-m">Custo un.</th><th>Situação</th><th></th></tr></thead><tbody>${linhas}</tbody></table>`
+      : '<div class="vazio">Nenhum item no estoque. Clique em “+ Novo item”.</div>';
+  }
+  function formEstoque(i) {
+    const novo = !i;
+    i = i || { id: novoId('e'), nome: '', cat: filtroEst.cat || '', un: 'un', qtd: 0, min: 0, custo: '', validade: '', fornecedor: '', foto: '' };
+    const estado = { foto: i.foto };
+    const cats = [...new Set(['Bebidas', 'Insumos', 'Embalagens', 'Limpeza', ...estoque.map(x => x.cat).filter(Boolean)])];
+    const f = abrirModal(`
+      <header>${novo ? 'Novo item de estoque' : 'Editar item'}</header>
+      <div class="corpo">
+        <label class="f full">Nome<input class="campo" name="nome" required value="${esc(i.nome)}"></label>
+        <label class="f">Categoria<input class="campo" name="cat" list="listaCats" value="${esc(i.cat)}" placeholder="Ex.: Insumos"><datalist id="listaCats">${cats.map(c => `<option value="${esc(c)}">`).join('')}</datalist></label>
+        <label class="f">Unidade<select class="campo" name="un">${['un', 'kg', 'g', 'L', 'ml', 'pct', 'cx', 'dz'].map(u => `<option ${u === i.un ? 'selected' : ''}>${u}</option>`).join('')}</select></label>
+        <label class="f">Quantidade atual<input class="campo" name="qtd" inputmode="decimal" value="${esc(i.qtd)}"></label>
+        <label class="f">Estoque mínimo<input class="campo" name="min" inputmode="decimal" value="${esc(i.min)}"></label>
+        <label class="f">Custo por unidade (R$)<input class="campo" name="custo" inputmode="decimal" value="${i.custo === '' ? '' : String(i.custo).replace('.', ',')}"></label>
+        <label class="f">Validade<input class="campo" type="date" name="validade" value="${esc(i.validade)}"></label>
+        <label class="f full">Fornecedor<input class="campo" name="fornecedor" value="${esc(i.fornecedor)}"></label>
+        ${blocoFoto(i.foto)}
+      </div>
+      <footer><button type="button" class="btn" onclick="this.closest('dialog').close()">Cancelar</button><button class="btn prim" value="ok">Salvar</button></footer>`,
+      fd => {
+        const qtdNova = num(fd.get('qtd'));
+        if (!novo && qtdNova !== num(i.qtd)) registrarMov(fd.get('nome'), qtdNova - num(i.qtd), 'est');
+        Object.assign(i, {
+          nome: fd.get('nome').trim(), cat: fd.get('cat').trim(), un: fd.get('un'), qtd: qtdNova, min: num(fd.get('min')),
+          custo: fd.get('custo') === '' ? '' : num(fd.get('custo')), validade: fd.get('validade'), fornecedor: fd.get('fornecedor').trim(), foto: estado.foto
+        });
+        if (novo) { estoque.push(i); if (qtdNova) registrarMov(i.nome, qtdNova, 'est'); }
+        salvarEstoque(); ir('estoque'); toast('Item salvo');
+      });
+    ligarFoto(f, estado);
+  }
+  function verMovs() {
+    const linhas = movs.slice(0, 80).map(m => `<tr class="mov"><td>${new Date(m.quando).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td><td>${esc(m.nome)}</td><td class="num ${m.delta > 0 ? 'mais' : 'menos'}">${m.delta > 0 ? '+' : ''}${esc(m.delta)}</td><td>${m.tipo === 'est' ? 'Estoque' : 'Cardápio'}</td></tr>`).join('');
+    abrirModal(`<header>Movimentações recentes</header>
+      <div style="padding:6px 22px;max-height:60vh;overflow:auto">${linhas ? `<table class="tab"><thead><tr><th>Quando</th><th>Item</th><th class="num">Qtd</th><th>Onde</th></tr></thead><tbody>${linhas}</tbody></table>` : '<p class="vazio">Nenhuma movimentação ainda.</p>'}</div>
+      <footer><button class="btn prim" value="fechar">Fechar</button></footer>`, () => {});
+  }
+
+  // ============ CATEGORIAS ============
+  function telaCategorias() {
+    main.innerHTML = `
+      <div class="cab"><h1>Categorias</h1><button class="btn prim" id="novaCat">+ Nova categoria</button></div>
+      <p class="dica" style="margin:-8px 0 14px">A ordem aqui é a ordem em que aparecem no cardápio. “Seção” agrupa as categorias (ex.: Salgados &amp; Bebidas).</p>
+      <table class="tab"><thead><tr><th>Categoria</th><th>Seção</th><th class="num">Produtos</th><th></th></tr></thead><tbody>
+      ${dados.categorias.map((c, idx) => `<tr data-cat="${esc(c.id)}">
+        <td class="nm"><b>${esc(c.nome)}</b>${c.obs ? `<span>${esc(c.obs)}</span>` : ''}</td>
+        <td>${esc(c.secao)}</td>
+        <td class="num">${dados.produtos.filter(p => p.cat === c.id).length}</td>
+        <td><div class="acoes-linha">
+          <button class="ic" data-c="sobe" ${idx === 0 ? 'disabled' : ''} title="Subir">${IC.up}</button>
+          <button class="ic" data-c="desce" ${idx === dados.categorias.length - 1 ? 'disabled' : ''} title="Descer">${IC.down}</button>
+          <button class="ic" data-c="editar" title="Editar">${IC.edit}</button>
+          <button class="ic del" data-c="excluir" title="Excluir">${IC.del}</button></div></td></tr>`).join('')}
+      </tbody></table>`;
+    $('#novaCat').onclick = () => formCategoria();
+    main.querySelector('tbody').onclick = e => {
+      const b = e.target.closest('[data-c]'); if (!b) return;
+      const cs = dados.categorias, idx = cs.findIndex(c => c.id === b.closest('tr').dataset.cat), c = cs[idx];
+      if (b.dataset.c === 'sobe' && idx > 0) [cs[idx - 1], cs[idx]] = [cs[idx], cs[idx - 1]];
+      if (b.dataset.c === 'desce' && idx < cs.length - 1) [cs[idx + 1], cs[idx]] = [cs[idx], cs[idx + 1]];
+      if (b.dataset.c === 'editar') return formCategoria(c);
+      if (b.dataset.c === 'excluir') {
+        if (dados.produtos.some(p => p.cat === c.id)) return toast('Mova ou exclua os produtos dessa categoria antes.');
+        if (!confirm(`Excluir a categoria "${c.nome}"?`)) return;
+        cs.splice(idx, 1);
+      }
+      salvarCardapio(); telaCategorias();
+    };
+  }
+  function formCategoria(c) {
+    const novo = !c;
+    c = c || { id: novoId('c'), nome: '', secao: dados.categorias.at(-1)?.secao || '', obs: '' };
+    const secoes = [...new Set(dados.categorias.map(x => x.secao).filter(Boolean))];
+    abrirModal(`<header>${novo ? 'Nova categoria' : 'Editar categoria'}</header>
+      <div class="corpo">
+        <label class="f full">Nome<input class="campo" name="nome" required value="${esc(c.nome)}"></label>
+        <label class="f full">Seção<input class="campo" name="secao" list="listaSec" value="${esc(c.secao)}"><datalist id="listaSec">${secoes.map(s => `<option value="${esc(s)}">`).join('')}</datalist></label>
+        <label class="f full">Observação (aparece acima dos itens)<textarea class="campo" name="obs">${esc(c.obs)}</textarea></label>
+      </div>
+      <footer><button type="button" class="btn" onclick="this.closest('dialog').close()">Cancelar</button><button class="btn prim" value="ok">Salvar</button></footer>`,
+      fd => {
+        Object.assign(c, { nome: fd.get('nome').trim(), secao: fd.get('secao').trim(), obs: fd.get('obs').trim() });
+        if (novo) dados.categorias.push(c);
+        salvarCardapio(); telaCategorias(); toast('Categoria salva');
+      });
+  }
+
+  // ============ QR CODE ============
+  function telaQR() {
+    const sugestao = location.protocol.startsWith('http') ? new URL('../', location.href).href : '';
+    const url = cfg.url || sugestao;
+    main.innerHTML = `
+      <div class="cab"><h1>QR Code do cardápio</h1></div>
+      <div class="qr-grid">
+        <div>
+          <div class="painel-sec">
+            <h2>Link do cardápio</h2>
+            <p>Cole aqui o endereço onde o cardápio está publicado. O QR Code abaixo leva o cliente direto para ele.</p>
+            <input class="campo" id="urlQR" style="width:100%" placeholder="https://seu-cardapio.netlify.app" value="${esc(url)}">
+            <div class="linha-bts" style="margin-top:12px">
+              <button class="btn prim" id="baixarQR">Baixar QR (PNG)</button>
+              <button class="btn" id="imprimirQR">Imprimir placa de mesa</button>
+              <a class="btn" id="abrirLink" target="_blank" rel="noopener">Abrir link</a>
+            </div>
+          </div>
+        </div>
+        <div class="placa" id="placa">
+          <div class="marca">${esc(dados.loja.nome)}</div>
+          <div class="marca-sub">${esc(dados.loja.subtitulo)}</div>
+          <h3>Nosso cardápio</h3>
+          <div id="qr"></div>
+          <p>Aponte a câmera do celular</p>
+        </div>
+      </div>`;
+    const inp = $('#urlQR');
+    const gerar = () => {
+      const v = inp.value.trim(); cfg.url = v; salvarCfg();
+      $('#abrirLink').href = v || '#';
+      const box = $('#qr'); box.innerHTML = '';
+      if (!v) { box.innerHTML = '<div style="width:220px;height:220px;display:grid;place-items:center;color:#999;font-size:.85rem">Informe o link</div>'; return; }
+      if (typeof QRCode === 'undefined') { box.textContent = 'Sem internet para gerar o QR agora.'; return; }
+      new QRCode(box, { text: v, width: 440, height: 440, colorDark: '#424509', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    };
+    inp.oninput = gerar; gerar();
+    $('#imprimirQR').onclick = () => window.print();
+    $('#baixarQR').onclick = () => {
+      const cv = $('#qr canvas'); if (!cv) return toast('Informe o link primeiro');
+      const out = document.createElement('canvas'), pad = 40; out.width = cv.width + pad * 2; out.height = cv.height + pad * 2;
+      const g = out.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, out.width, out.height); g.drawImage(cv, pad, pad);
+      const a = document.createElement('a'); a.download = 'qrcode-cardapio.png'; a.href = out.toDataURL('image/png'); a.click();
+    };
+  }
+
+  // ============ PUBLICAR / BACKUP ============
+  function baixar(nome, conteudo, tipo) {
+    const a = document.createElement('a'); a.download = nome;
+    a.href = URL.createObjectURL(new Blob([conteudo], { type: tipo })); a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+  function telaPublicar() {
+    const tam = (JSON.stringify(dados).length + JSON.stringify(estoque).length) / 1024;
+    main.innerHTML = `
+      <div class="cab"><h1>Publicar e backup</h1></div>
+      ${NUVEM ? `<div class="painel-sec">
+        <h2>Cardápio online conectado</h2>
+        <p>Cada alteração feita no painel já aparece para o cliente, sem precisar publicar nada. O arquivo abaixo serve só como cópia de reserva, caso a nuvem fique fora do ar.</p>
+      </div>` : ''}
+      <div class="painel-sec" ${NUVEM ? 'style="opacity:.8"' : ''}>
+        <h2>Atualizar o cardápio online</h2>
+        <p>As mudanças feitas aqui ficam salvas neste computador. Para que os clientes vejam, gere o arquivo do cardápio e envie para a hospedagem.</p>
+        <ol class="passos">
+          <li>Clique em <b>Gerar cardapio.js</b>.</li>
+          <li>Substitua o arquivo <code>dados/cardapio.js</code> do site pelo arquivo baixado.</li>
+          <li>Pronto: quem escanear o QR Code já vê o cardápio novo.</li>
+        </ol>
+        <div class="linha-bts" style="margin-top:14px">
+          <button class="btn prim" id="gerar">Gerar cardapio.js</button>
+          <a class="btn" href="../index.html?preview=1" target="_blank">Ver prévia antes</a>
+        </div>
+      </div>
+      <div class="painel-sec">
+        <h2>Dados da loja</h2>
+        <div class="corpo" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0">
+          <label class="f">WhatsApp (só números, com DDI)<input class="campo" id="lzap" value="${esc(dados.loja.whatsapp)}"></label>
+          <label class="f">WhatsApp como aparece<input class="campo" id="lzapt" value="${esc(dados.loja.whatsappTexto)}"></label>
+          <label class="f">Instagram (sem @)<input class="campo" id="linsta" value="${esc(dados.loja.instagram)}"></label>
+          <label class="f">Apps de delivery (separados por vírgula)<input class="campo" id="ldeliv" value="${esc((dados.loja.delivery || []).join(', '))}"></label>
+        </div>
+        <div class="linha-bts" style="margin-top:12px"><button class="btn verde" id="salvarLoja">Salvar dados da loja</button></div>
+      </div>
+      <div class="painel-sec">
+        <h2>Backup</h2>
+        <p>Guarde uma cópia de tudo (cardápio, estoque e fotos) num pendrive ou no Google Drive. Use para levar os dados para outro computador. Tamanho atual: ${tam.toFixed(0)} KB de ~5.000 KB disponíveis.</p>
+        <div class="linha-bts">
+          <button class="btn" id="exportar">Baixar backup</button>
+          <button class="btn" id="importar">Restaurar backup</button>
+          <button class="btn perigo" id="resetar">Voltar ao cardápio original</button>
+        </div>
+      </div>`;
+    $('#gerar').onclick = () => {
+      dados.atualizado = hoje(); salvarCardapio();
+      const corpo = '// Dados publicados do cardápio. Este arquivo é gerado pelo painel (admin > Publicar).\n// Para atualizar o cardápio online, exporte um novo cardapio.js no painel e substitua este.\nwindow.CARDAPIO = ' + JSON.stringify(dados, null, 2) + ';\n';
+      baixar('cardapio.js', corpo, 'text/javascript'); toast('Arquivo gerado');
+    };
+    $('#salvarLoja').onclick = () => {
+      Object.assign(dados.loja, { whatsapp: $('#lzap').value.replace(/\D/g, ''), whatsappTexto: $('#lzapt').value.trim(), instagram: $('#linsta').value.replace('@', '').trim(), delivery: $('#ldeliv').value.split(',').map(s => s.trim()).filter(Boolean) });
+      salvarCardapio(); toast('Dados da loja salvos');
+    };
+    $('#exportar').onclick = () => baixar(`backup-limalima-${hoje()}.json`, JSON.stringify({ versao: 1, dados, estoque, movs }), 'application/json');
+    $('#importar').onclick = () => {
+      const inp = $('#arquivoBackup'); inp.value = '';
+      inp.onchange = async () => {
+        try {
+          const b = JSON.parse(await inp.files[0].text());
+          if (!b.dados || !Array.isArray(b.estoque)) throw 0;
+          if (!confirm('Isso substitui os dados atuais deste computador. Continuar?')) return;
+          dados = b.dados; estoque = b.estoque; movs = b.movs || [];
+          salvarTudo(); gravar(K.movs, movs); ir('cardapio'); toast('Backup restaurado');
+        } catch (e) { toast('Arquivo de backup inválido'); }
+      };
+      inp.click();
+    };
+    $('#resetar').onclick = () => {
+      if (!confirm('Voltar o cardápio para a versão publicada? Fotos e mudanças do cardápio feitas aqui serão perdidas (o estoque é mantido).')) return;
+      dados = JSON.parse(JSON.stringify(window.CARDAPIO)); salvarCardapio(); ir('cardapio'); toast('Cardápio restaurado');
+    };
+  }
+
+  const cache = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  if (NUVEM) {
+    const { data: { session } } = await NUVEM.auth.getSession();
+    if (!session) await telaLogin();
+    $('#sair').hidden = false;
+    $('#sair').onclick = async () => { await enviarPendentes(); await NUVEM.auth.signOut(); location.reload(); };
+    const { data, error } = await NUVEM.from('documentos').select('id,dados');
+    if (error) {
+      statusNuvem('erro'); toast('Sem conexão com a nuvem. Usando os dados deste PC.');
+    } else {
+      const doc = Object.fromEntries(data.map(r => [r.id, r.dados]));
+      // O que já está na nuvem vale; o que ainda não existe lá é enviado a partir deste PC
+      if (doc.cardapio) { dados = doc.cardapio; cache(K.cardapio, dados); } else salvarCardapio();
+      if (doc.estoque) { estoque = doc.estoque; cache(K.estoque, estoque); } else salvarEstoque();
+      if (doc.movs) { movs = doc.movs; cache(K.movs, movs); }
+      if (!pendentes.size) statusNuvem('ok');
+    }
+  } else {
+    statusNuvem(configurado ? 'erro' : 'local');
+    salvarCardapio(); salvarEstoque();
+  }
+  ir(cfg.aba);
+})();
+</script>
+</body>
+</html>

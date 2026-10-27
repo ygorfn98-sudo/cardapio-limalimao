@@ -1,0 +1,54 @@
+/* Paleta tirada do cardápio impresso da LimaLima */
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Dancing+Script:wght@600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&family=Quicksand:wght@500;600&display=swap');
+
+:root {
+  --oliva: #424509;
+  --oliva-2: #5b5f16;
+  --laranja: #e36c39;
+  --laranja-escuro: #c84027;
+  --pessego: #f59b5e;
+  --creme: #fdefe0;
+  --creme-2: #fff8f0;
+  --papel: #fffdf9;
+  --tinta: #2b2a1f;
+  --tinta-2: #6b6656;
+  --linha: #ecdcc8;
+  --ok: #4f7a28;
+  --alerta: #c84027;
+  --aviso: #d98a1c;
+
+  --serif: 'DM Serif Display', Georgia, serif;
+  --script: 'Dancing Script', cursive;
+  --marca: 'Quicksand', 'Nunito Sans', sans-serif;
+  --sans: 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --raio: 14px;
+  --sombra: 0 1px 2px rgba(66, 69, 9, .06), 0 6px 18px -8px rgba(120, 60, 20, .18);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--tinta);
+  background: var(--creme);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+img { display: block; max-width: 100%; }
+
+.marca { font-family: var(--marca); font-weight: 600; color: var(--oliva); letter-spacing: -.01em; line-height: 1; }
+.marca-sub { font-family: var(--script); color: var(--oliva-2); line-height: 1; }
+
+/* Etiqueta laranja dos títulos de categoria, igual ao impresso */
+.etiqueta {
+  display: inline-block;
+  font-family: var(--serif);
+  color: #fff;
+  background: linear-gradient(100deg, var(--laranja-escuro), var(--laranja) 55%, var(--pessego));
+  padding: .28em .9em .32em;
+  border-radius: 999px 1.2em 999px 1.2em;
+  line-height: 1.1;
+}
